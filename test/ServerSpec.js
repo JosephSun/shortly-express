@@ -200,7 +200,7 @@ var xbeforeEach = function(){};
 
         requestWithSession(options, function(error, res, body) {
           var currentLocation = res.request.href;
-          expect(currentLocation).to.equal('http://www.github.com/');
+          expect(currentLocation).to.equal('https://github.com/');
           done();
         });
       });

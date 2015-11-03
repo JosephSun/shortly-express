@@ -24,34 +24,26 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
 var loginRestriction = function(req, res, next){
-  console.log("This is in the loginRestriction   req.body", req.body, 'req', req, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@(@(@(@((@(@((@(@(@(@(@", "res", res, 'res.body', res.body, 'next', next)
-  if (req.session.user) {
-    next(); 
-  }else {
-    req.session.error = 'Access denied!';
-    res.redirect('/login');
-  }
+  //remember to check if they are logged in then don't redirect. If they are not logged in then redirect
+  res.redirect("/login");
+
+  //also create logic for when the user tries to create a link and is not logged in. 
 };
 
 app.get('/', loginRestriction,
 function(req, res) {
-  console.log("dirname&&&&&&&&&&&&&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",__dirname);
-  // res.redirect('/views/login.ejs');
-// console.log("app url /", "req", req, "res", res);
   res.render('index');
 });
 
-// app.get('/', loginRestriction, function(req, res){
-//   res.send('Login successful');
-// });
+app.get('/login', function(req, res){
+  res.send('Login successful');
+});
 
-app.get('/create', 
+app.get('/create', loginRestriction,
 function(req, res) {
-  // console.log("app url /create", "req", req, "res", res);
-
   res.render('index');
 });
-app.get('/links', 
+app.get('/links', loginRestriction, 
 function(req, res) {
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);

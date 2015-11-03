@@ -1,3 +1,4 @@
+console.log("MU***************************************************************************");
 var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
@@ -12,9 +13,9 @@ var Link = require('./app/models/link');
 var Click = require('./app/models/click');
 
 var app = express();
-
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
+console.log('app', app)
 app.use(partials());
 // Parse JSON (uniform resource locators)
 app.use(bodyParser.json());
@@ -22,17 +23,34 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
+var loginRestriction = function(req, res, next){
+  console.log("This is in the loginRestriction   req.body", req.body, 'req', req, "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@(@(@(@((@(@((@(@(@(@(@", "res", res, 'res.body', res.body, 'next', next)
+  if (req.session.user) {
+    next(); 
+  }else {
+    req.session.error = 'Access denied!';
+    res.redirect('/login');
+  }
+};
 
-app.get('/', 
+app.get('/', loginRestriction,
 function(req, res) {
+  console.log("dirname&&&&&&&&&&&&&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@",__dirname);
+  // res.redirect('/views/login.ejs');
+// console.log("app url /", "req", req, "res", res);
   res.render('index');
 });
+
+// app.get('/', loginRestriction, function(req, res){
+//   res.send('Login successful');
+// });
 
 app.get('/create', 
 function(req, res) {
+  // console.log("app url /create", "req", req, "res", res);
+
   res.render('index');
 });
-
 app.get('/links', 
 function(req, res) {
   Links.reset().fetch().then(function(links) {
@@ -90,6 +108,7 @@ function(req, res) {
 app.get('/*', function(req, res) {
   new Link({ code: req.params[0] }).fetch().then(function(link) {
     if (!link) {
+      // console.log("res", Object.keys(res), "req", Object.keys(req), "link", link, "res.url", res.url);
       res.redirect('/');
     } else {
       var click = new Click({

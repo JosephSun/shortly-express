@@ -1,4 +1,4 @@
-console.log("MU***************************************************************************");
+
 var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
@@ -11,11 +11,12 @@ var User = require('./app/models/user');
 var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
-
+var session = require("express- sessions");
 var app = express();
+
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
-console.log('app', app)
+
 app.use(partials());
 // Parse JSON (uniform resource locators)
 app.use(bodyParser.json());
@@ -23,27 +24,63 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
-var loginRestriction = function(req, res, next){
-  //remember to check if they are logged in then don't redirect. If they are not logged in then redirect
-  res.redirect("/login");
+app.use(session({
+  secret: 'be quiet, it\'s a secret',
+  resave: false,
+  saveUninitialized: true
+}));
 
-  //also create logic for when the user tries to create a link and is not logged in. 
-};
 
-app.get('/', loginRestriction,
+
+app.get('/', util.checkUser,
 function(req, res) {
+  console.log("This is the Users Collection",Users);
+
   res.render('index');
 });
 
 app.get('/login', function(req, res){
-  res.send('Login successful');
+  res.render('login');
 });
 
-app.get('/create', loginRestriction,
+app.get('/signup', 
+function(req, res) {
+  res.render('signup');
+});
+
+
+app.post('/signup', 
+function(req, res) {
+  var username = req.body.username;
+  var password = req.body.password;
+
+  new User({ username: username })
+    .fetch()
+    .then(function(user) {
+      if (!user) {
+        var newUser = new User({
+          username: username,
+          password: password
+        });
+        newUser.save()
+          .then(function(newUser) {
+            util.createSession(req, res, newUser);
+            Users.add(newUser);
+          });
+      } else {
+        console.log('Account already exists');
+        res.redirect('/signup');
+      }
+    });
+  
+});
+
+app.get('/create', util.checkUser,
 function(req, res) {
   res.render('index');
 });
-app.get('/links', loginRestriction, 
+
+app.get('/links', util.checkUser, 
 function(req, res) {
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
@@ -52,6 +89,8 @@ function(req, res) {
 
 app.post('/links', 
 function(req, res) {
+  console.log("Hello WOlrd, I don't know who I am. ");
+
   var uri = req.body.url;
 
   if (!util.isValidUrl(uri)) {
@@ -88,7 +127,33 @@ function(req, res) {
 // Write your dedicated authentication routes here
 // e.g. login, logout, etc.
 /************************************************************/
+app.post('/login', function(req, res) {
+  var username = req.body.username;
+  var password = req.body.password;
 
+  new User({ username: username })
+    .fetch()
+    .then(function(user) {
+      if (!user) {
+        res.redirect('/login');
+      } else {
+        user.comparePassword(password, function(match) {
+          if (match) {
+            util.createSession(req, res, user);
+          } else {
+            res.redirect('/login');
+          }
+        });
+      }
+  });
+});
+
+
+app.get('/logout', function(req, res) {
+  req.session.destroy(function(){
+    res.redirect('/login');
+  });
+});
 
 
 /************************************************************/

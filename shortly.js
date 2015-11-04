@@ -11,7 +11,7 @@ var User = require('./app/models/user');
 var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
-var session = require("express- sessions");
+var session = require("express-session");
 var app = express();
 
 app.set('views', __dirname + '/views');
@@ -34,14 +34,10 @@ app.use(session({
 
 app.get('/', util.checkUser,
 function(req, res) {
-  console.log("This is the Users Collection",Users);
 
   res.render('index');
 });
 
-app.get('/login', function(req, res){
-  res.render('login');
-});
 
 app.get('/signup', 
 function(req, res) {
@@ -89,7 +85,6 @@ function(req, res) {
 
 app.post('/links', 
 function(req, res) {
-  console.log("Hello WOlrd, I don't know who I am. ");
 
   var uri = req.body.url;
 
@@ -127,6 +122,10 @@ function(req, res) {
 // Write your dedicated authentication routes here
 // e.g. login, logout, etc.
 /************************************************************/
+app.get('/login', function(req, res){
+  res.render('login');
+});
+
 app.post('/login', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
